@@ -52,48 +52,32 @@ const createRichTextContent = () => {
 
 // Helper function to create layout blocks
 const createLayoutBlocks = () => {
-  const blockTypes = ['hero', 'content', 'mediaBlock', 'callToAction', 'archive']
-  const numBlocks = faker.number.int({ min: 2, max: 5 })
+  const blockTypes = ['content', 'callToAction']
+  const numBlocks = faker.number.int({ min: 1, max: 3 })
 
   return Array.from({ length: numBlocks }, () => {
     const blockType = faker.helpers.arrayElement(blockTypes)
 
     switch (blockType) {
-      case 'hero':
-        return {
-          blockType: 'hero',
-          headline: faker.lorem.sentence({ min: 3, max: 8 }),
-          description: faker.lorem.paragraph(),
-          media: null, // Will be populated with actual media later
-        }
       case 'content':
         return {
           blockType: 'content',
           content: createRichTextContent(),
-        }
-      case 'mediaBlock':
-        return {
-          blockType: 'mediaBlock',
-          media: null, // Will be populated with actual media later
-          caption: faker.lorem.sentence(),
         }
       case 'callToAction':
         return {
           blockType: 'callToAction',
           headline: faker.lorem.sentence({ min: 3, max: 6 }),
           description: faker.lorem.paragraph(),
-          link: {
-            type: 'custom',
-            url: faker.internet.url(),
-            label: faker.lorem.words(2),
-          },
-        }
-      case 'archive':
-        return {
-          blockType: 'archive',
-          populateBy: 'collection',
-          relationTo: 'posts',
-          limit: faker.number.int({ min: 3, max: 12 }),
+          actions: [
+            {
+              link: {
+                type: 'custom',
+                url: faker.internet.url(),
+                label: faker.lorem.words(2),
+              },
+            },
+          ],
         }
       default:
         return {
@@ -307,10 +291,9 @@ const seedPages = async (mediaItems) => {
         keywords: 'home, welcome, main',
       },
       hero: {
-        type: 'default',
+        type: 'lowImpact', // Use simpler hero type
         headline: 'Welcome to Our Amazing Website',
         description: faker.lorem.paragraph(),
-        media: mediaItems.length > 0 ? faker.helpers.arrayElement(mediaItems).id : null,
       },
       layout: createLayoutBlocks(),
       _status: 'published',
@@ -333,10 +316,9 @@ const seedPages = async (mediaItems) => {
           keywords: faker.lorem.words(5),
         },
         hero: {
-          type: 'default',
+          type: 'lowImpact', // Use simpler hero type
           headline: pageType.title,
           description: faker.lorem.paragraph(),
-          media: mediaItems.length > 0 ? faker.helpers.arrayElement(mediaItems).id : null,
         },
         layout: createLayoutBlocks(),
         _status: 'draft', // Always create as draft to avoid revalidation
