@@ -3,7 +3,6 @@ import payload from 'payload'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
-import config from '../src/payload.config.ts'
 
 // ES module compatibility
 const __filename = fileURLToPath(import.meta.url)
@@ -457,9 +456,24 @@ const seed = async () => {
     console.log('🚀 Starting Payload website seeding process...')
     console.log('📊 Seed configuration:', SEED_CONFIG)
 
-    // Initialize Payload with imported config
+    // Debug environment variables
+    console.log('🔍 Environment check:')
+    console.log('   NODE_ENV:', process.env.NODE_ENV)
+    console.log('   PAYLOAD_SECRET exists:', !!process.env.PAYLOAD_SECRET)
+    console.log('   DATABASE_URI:', process.env.DATABASE_URI)
+
+    if (!process.env.PAYLOAD_SECRET) {
+      console.error('❌ PAYLOAD_SECRET is not set in environment variables')
+      console.error('💡 Make sure your .env file exists and contains PAYLOAD_SECRET')
+      process.exit(1)
+    }
+
+    // Initialize Payload - for v3, we need to start the app first
+    const { default: configPromise } = await import('../src/payload.config.ts')
+    const payloadConfig = await configPromise
+
     await payload.init({
-      config,
+      config: payloadConfig,
       secret: process.env.PAYLOAD_SECRET,
       local: true,
     })
