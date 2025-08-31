@@ -485,6 +485,7 @@ const seed = async () => {
     console.log('   NODE_ENV:', process.env.NODE_ENV)
     console.log('   PAYLOAD_SECRET exists:', !!process.env.PAYLOAD_SECRET)
     console.log('   DATABASE_URI:', process.env.DATABASE_URI)
+    console.log('   PAYLOAD_SEEDING:', process.env.PAYLOAD_SEEDING)
 
     if (!process.env.PAYLOAD_SECRET) {
       console.error('❌ PAYLOAD_SECRET is not set in environment variables')
@@ -565,10 +566,15 @@ const seed = async () => {
     console.log('   Email: admin@example.com')
     console.log('   Password: admin123!')
     console.log('\n🌐 Visit http://localhost:3000/admin to access the admin panel')
+    console.log(
+      '\n💡 Note: Some revalidation warnings are normal during seeding and can be ignored.',
+    )
   } catch (error) {
     console.error('❌ Seeding failed:', error)
     throw error
   } finally {
+    // Clean up environment variable
+    delete process.env.PAYLOAD_SEEDING
     process.exit(0)
   }
 }
