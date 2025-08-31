@@ -19,10 +19,16 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test --config=playwright.config.ts",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
+    "seed": "node scripts/seed.js",
+    "seed:ts": "ts-node scripts/seed.ts",
+    "seed:dev": "NODE_ENV=development node scripts/seed.js",
+    "seed:fresh": "npm run db:reset && npm run seed",
+    "db:reset": "payload migrate:reset --force"
   },
   "dependencies": {
     "@payloadcms/admin-bar": "3.54.0",
+    "@payloadcms/db-sqlite": "3.54.0",
     "@payloadcms/live-preview-react": "3.54.0",
     "@payloadcms/next": "3.54.0",
     "@payloadcms/payload-cloud": "3.54.0",
@@ -53,11 +59,11 @@
     "react-hook-form": "7.45.4",
     "sharp": "0.34.2",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7",
-    "@payloadcms/db-sqlite": "3.54.0"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
+    "@faker-js/faker": "^10.0.0",
     "@playwright/test": "1.54.1",
     "@tailwindcss/typography": "^0.5.13",
     "@testing-library/react": "16.3.0",
