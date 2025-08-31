@@ -3,6 +3,7 @@ import payload from 'payload'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
+import config from '../src/payload.config.ts'
 
 // ES module compatibility
 const __filename = fileURLToPath(import.meta.url)
@@ -18,10 +19,10 @@ const cleanup = async () => {
   try {
     console.log('🧹 Starting database cleanup...')
 
-    // Initialize Payload with config
+    // Initialize Payload with imported config
     await payload.init({
+      config,
       secret: process.env.PAYLOAD_SECRET,
-      configPath: path.resolve(__dirname, '../src/payload.config.ts'),
       local: true,
     })
 
