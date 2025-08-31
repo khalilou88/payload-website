@@ -9,6 +9,8 @@ export const revalidatePost: CollectionAfterChangeHook<Post> = ({
   previousDoc,
   req: { payload, context },
 }) => {
+  if (process.env.PAYLOAD_SEEDING === 'true') return
+
   if (!context.disableRevalidate) {
     if (doc._status === 'published') {
       const path = `/posts/${doc.slug}`
