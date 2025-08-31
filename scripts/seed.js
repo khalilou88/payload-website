@@ -24,15 +24,30 @@ const SEED_CONFIG = {
 
 // Helper function to create realistic content
 const createRichTextContent = () => {
-  const paragraphs = faker.number.int({ min: 2, max: 5 })
-  return Array.from({ length: paragraphs }, () => ({
-    type: 'paragraph',
-    children: [
-      {
-        text: faker.lorem.paragraphs(1, '\n\n'),
-      },
-    ],
-  }))
+  return {
+    root: {
+      type: 'root',
+      children: [
+        {
+          type: 'heading',
+          tag: 'h2',
+          children: [{ text: faker.lorem.sentence({ min: 3, max: 6 }) }],
+        },
+        {
+          type: 'paragraph',
+          children: [{ text: faker.lorem.paragraph() }],
+        },
+        {
+          type: 'paragraph',
+          children: [{ text: faker.lorem.paragraph() }],
+        },
+        {
+          type: 'paragraph',
+          children: [{ text: faker.lorem.paragraph() }],
+        },
+      ],
+    },
+  }
 }
 
 // Helper function to create layout blocks
@@ -94,34 +109,57 @@ const seedUsers = async () => {
   console.log('🌱 Seeding users...')
   const users = []
 
-  // Create admin user first
-  const adminUser = await payload.create({
+  // Check if admin user already exists
+  const existingAdmin = await payload.find({
     collection: 'users',
-    data: {
-      email: 'admin@example.com',
-      password: 'admin123!',
-      name: 'Admin User',
-      roles: ['admin'],
+    where: {
+      email: {
+        equals: 'admin@example.com',
+      },
     },
+    limit: 1,
   })
-  users.push(adminUser)
-  console.log(`✅ Created admin user: ${adminUser.email}`)
 
-  // Create additional users
+  let adminUser
+  if (existingAdmin.docs.length === 0) {
+    // Create admin user
+    adminUser = await payload.create({
+      collection: 'users',
+      data: {
+        email: 'admin@example.com',
+        password: 'admin123!',
+        name: 'Admin User',
+        roles: ['admin'],
+      },
+    })
+    console.log(`✅ Created admin user: ${adminUser.email}`)
+  } else {
+    adminUser = existingAdmin.docs[0]
+    console.log(`✅ Admin user already exists: ${adminUser.email}`)
+  }
+  users.push(adminUser)
+
+  // Create additional users with unique emails
   for (let i = 0; i < SEED_CONFIG.users - 1; i++) {
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
-    const user = await payload.create({
-      collection: 'users',
-      data: {
-        email: faker.internet.email({ firstName, lastName }).toLowerCase(),
-        password: 'password123!',
-        name: `${firstName} ${lastName}`,
-        roles: [faker.helpers.arrayElement(['editor', 'author'])],
-      },
-    })
-    users.push(user)
-    console.log(`✅ Created user: ${user.email}`)
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Date.now()}.${i}@example.com`
+
+    try {
+      const user = await payload.create({
+        collection: 'users',
+        data: {
+          email: email,
+          password: 'password123!',
+          name: `${firstName} ${lastName}`,
+          roles: [faker.helpers.arrayElement(['editor', 'author'])],
+        },
+      })
+      users.push(user)
+      console.log(`✅ Created user: ${user.email}`)
+    } catch (error) {
+      console.log(`⚠️ Skipped user creation (${email}): ${error.message}`)
+    }
   }
 
   return users
@@ -230,7 +268,7 @@ const seedPosts = async (categories, users, mediaItems) => {
         publishedOn: publishedDate,
         authors: users.length > 0 ? [faker.helpers.arrayElement(users).id] : [],
         populatedAuthors: [],
-        _status: faker.helpers.arrayElement(['published', 'draft']),
+        _status: 'draft', // Always create as draft to avoid revalidation
         enablePremiumContent: faker.datatype.boolean(),
         relatedPosts: [], // Will be populated after all posts are created
       },
@@ -301,7 +339,7 @@ const seedPages = async (mediaItems) => {
           media: mediaItems.length > 0 ? faker.helpers.arrayElement(mediaItems).id : null,
         },
         layout: createLayoutBlocks(),
-        _status: faker.helpers.arrayElement(['published', 'draft']),
+        _status: 'draft', // Always create as draft to avoid revalidation
         publishedOn: faker.date.recent({ days: 30 }),
       },
     })
@@ -453,6 +491,10 @@ const seedRedirects = async () => {
 // Main seeding function
 const seed = async () => {
   try {
+    // Set environment flag to disable revalidation during seeding
+    process.env.PAYLOAD_SEEDING = 'true'
+    process.env.NODE_ENV = 'development'
+
     console.log('🚀 Starting Payload website seeding process...')
     console.log('📊 Seed configuration:', SEED_CONFIG)
 
@@ -476,6 +518,7 @@ const seed = async () => {
       config: payloadConfig,
       secret: process.env.PAYLOAD_SECRET,
       local: true,
+      disableOnInit: true, // Disable hooks during initialization
     })
 
     console.log('✅ Payload initialized')
