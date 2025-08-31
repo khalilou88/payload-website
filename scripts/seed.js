@@ -459,7 +459,7 @@ const seed = async () => {
     // Initialize Payload with config
     await payload.init({
       secret: process.env.PAYLOAD_SECRET,
-      configPath: path.resolve(__dirname, '../payload.config.ts'),
+      configPath: path.resolve(__dirname, '../src/payload.config.ts'),
       local: true,
     })
 
